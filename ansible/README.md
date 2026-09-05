@@ -1,0 +1,3 @@
+
+RUN ON PVE BEFORE STARTING THE PLAYBOOK
+qm resize xx scsi0 32G

@@ -1,0 +1,20 @@
+---
+- name: Disk resize
+  hosts: all
+  become: true
+
+  tasks:
+    - name: growpart
+      command: growpart /dev/sda 1
+      ignore_errors: true
+
+    - name: resize2fs
+      command: resize2fs /dev/sda1
+
+    - name: Ellenőrzés
+      command: df -h /
+      register: df_output
+
+    - name: Eredmény
+      debug:
+        msg: "{{ df_output.stdout }}"

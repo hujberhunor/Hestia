@@ -1,0 +1,35 @@
+---
+- name: Configure insecure registry
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create /etc/rancher/k3s directory
+      file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: '0755'
+
+    - name: Create registries.yaml
+      copy:
+        dest: /etc/rancher/k3s/registries.yaml
+        content: |
+          mirrors:
+            "registry.globalstarving.duckdns.org":
+              endpoint:
+                - "http://registry.globalstarving.duckdns.org"
+            "192.168.1.196:30500":
+              endpoint:
+                - "http://192.168.1.196:30500"
+
+    - name: Restart k3s-agent on workers
+      systemd:
+        name: k3s-agent
+        state: restarted
+      when: "'k3s_workers' in group_names"
+
+    - name: Restart k3s on master
+      systemd:
+        name: k3s
+        state: restarted
+      when: "'k3s_master' in group_names"

@@ -1,0 +1,112 @@
+- name: Bootstrap k3s worker nodes
+  hosts: all
+  become: true
+
+  vars:
+    base_packages:
+      - vim
+      - ranger
+      - git
+      - curl
+      - wget
+      - htop
+      - jq
+      - net-tools
+      - dnsutils
+      - iptables
+      - iproute2
+      - ca-certificates
+      - bash-completion
+      - unzip
+      - tar
+      - kitty-terminfo
+
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      apt:
+        name: "{{ base_packages }}"
+        state: present
+
+    # --- K3S REQUIREMENTS ---
+    - name: Disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Remove swap from fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*swap.*)$'
+        replace: '# \1'
+
+    - name: Enable br_netfilter
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Persist module
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: "br_netfilter\n"
+
+    - name: Sysctl for k8s
+      copy:
+        dest: /etc/sysctl.d/k8s.conf
+        content: |
+          net.bridge.bridge-nf-call-iptables = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward = 1
+
+    - name: Apply sysctl
+      command: sysctl --system
+
+    # --- BASH UX ---
+    - name: Ensure .bashrc has color prompt
+      lineinfile:
+        path: /home/{{ ansible_user }}/.bashrc
+        create: yes
+        line: 'force_color_prompt=yes'
+
+    - name: Enable colored ls
+      lineinfile:
+        path: /home/{{ ansible_user }}/.bashrc
+        line: 'alias ls="ls --color=auto"'
+
+    - name: Add useful aliases
+      blockinfile:
+        path: /home/{{ ansible_user }}/.bashrc
+        block: |
+          alias ll='ls -alF'
+          alias la='ls -A'
+          alias l='ls -CF'
+          alias k='kubectl'
+          export EDITOR=vim
+
+    - name: Enable bash completion
+      lineinfile:
+        path: /home/{{ ansible_user }}/.bashrc
+        line: '[ -f /etc/bash_completion ] && . /etc/bash_completion'
+
+    - name: Fix ownership of bashrc
+      file:
+        path: /home/{{ ansible_user }}/.bashrc
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        state: file
+        
+    # --- PROXMOX QEMU GUEST AGENT ---
+    - name: Install qemu guest agent
+      apt:
+        name: qemu-guest-agent
+        state: present
+
+    - name: Enable and start qemu guest agent
+      service:
+        name: qemu-guest-agent
+        state: started
+        enabled: true
