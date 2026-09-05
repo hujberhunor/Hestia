@@ -24,9 +24,7 @@ The repository has four main areas:
 - `app/` — user-facing application source for now;
 - `k3s-stack/` — Flux-managed Kubernetes configuration;
 - `.agent/` — agent instructions, skills, plans, and task checklists;
-- `.agent/CONTEXT.md` — durable project context;
-- `.agent/memory/ARCHITECTURE.md` — architecture state and diagrams;
-- `.agent/sessions/` — task-specific continuation notes;
+- `memory/` — durable project memory, decisions, lessons, and session state;
 - `thesis/` — diploma source.
 
 Supporting scripts live under `scripts/` and suporting tools like Ansible or terraform could have their own folder. 
@@ -49,14 +47,19 @@ The user-facing application may later move to a separate repository. This is int
 │   └── apps/
 │
 ├── .agent/
-│   ├── AGENTS.md
-│   ├── CONTEXT.md
-│   ├── memory/
-│   │   └── ARCHITECTURE.md
-│   └── sessions/
-│   ├── prompts/
+│   ├── PLAN.md
+│   ├── PHASE-1-TODO.md
 │   ├── instructions/
-│   └── PLAN.md
+│   │   ├── AGENTS_local.md
+│   │   ├── AGENTS_llm.md
+│   │   └── SYSTEM_PROMPT.md
+│   └── skills/
+│       └── PI-SKILLS.md
+├── memory/
+│   ├── session/
+│   ├── adr/
+│   ├── lesson/
+│   └── architecture/
 │
 ├── thesis/
 ├── scripts/
@@ -67,7 +70,8 @@ The user-facing application may later move to a separate repository. This is int
 
 There is no separate `docs/` directory.
 
-Agent workflow files and durable agent context belong under `.agent/`.
+Agent workflow files belong under `.agent/`. Durable project information
+belongs under `memory/`.
 
 ## 4. GitOps boundary
 
@@ -241,9 +245,16 @@ The AI memory must allow an agent to determine:
 - relevant Git-managed resources;
 - recent session state.
 
-The durable AI-assisted project state is stored in `.agent/CONTEXT.md` and
-`.agent/memory/ARCHITECTURE.md`. Task-specific continuation state is stored in
-`.agent/sessions/`. There is no separate ADR, lesson, or memory framework.
+The durable AI-assisted project state is stored in `memory/`.
+
+Memory types:
+
+- `sessions/` — recent session state;
+- `architecture/` — current architecture state;
+- `adr/` — durable architecture decisions;
+- `lessons/` — reusable lessons.
+
+There is no separate documentation directory.
 
 ## 11. Pi agents
 
@@ -293,8 +304,7 @@ Prefer Mermaid, UML, and ASCII diagrams when they communicate the idea better th
 
 ## 13. Path-scoped system prompt
 
-`.agent/prompts/COMMON.md` defines universal work rules. Scope prompts under
-`.agent/prompts/` define domain-specific work.
+`.agent/instructions/SYSTEM_PROMPT.md` defines path-scoped work.
 
 Examples:
 
@@ -306,7 +316,7 @@ Examples:
 /k3s-stack
     -> write only k3s-stack/
 /memory
-    -> write only .agent/
+    -> write only memory/
 ```
 
 The agent should load only context relevant to the active scope.
