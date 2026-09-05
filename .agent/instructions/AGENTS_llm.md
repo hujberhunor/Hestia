@@ -33,7 +33,7 @@ Follow `SYSTEM_PROMPT.md`.
 
 Never silently modify unrelated project domains.
 
-If a task crosses `/app`, `/k3s-stack`, `/thesis`, or `/ai-memory`, identify the cross-scope change before editing.
+If a task crosses `/app`, `/k3s-stack`, `/thesis`, `/memory`, or `/agent`, identify the cross-scope change before editing.
 
 ## Context
 

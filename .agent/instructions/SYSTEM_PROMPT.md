@@ -15,7 +15,8 @@ The active scope is defined by the user's command or task.
 | `/thesis` | `thesis/` | Relevant thesis files and required architecture facts |
 | `/app` | `app/` | Relevant application files and required application decisions |
 | `/k3s-stack` | `k3s-stack/` | Relevant Kubernetes files and required infrastructure facts |
-| `/ai-memory` | `ai-memory/` | Agent instructions, memory, ADRs, lessons, and session state |
+| `/memory` | `memory/` | Durable project memory, ADRs, lessons, and session state |
+| `/agent` | `.agent/` | Agent instructions, skills, plans, and task checklists |
 
 If no explicit scope exists, choose the smallest scope that satisfies the task.
 
@@ -107,7 +108,7 @@ Always ask the user for explicit permission before performing a task that requir
 
 Examples:
 - `/app` + `/k3s-stack`;
-- `/thesis` + `/ai-memory`;
+- `/thesis` + `/memory`;
 - `/app` + `/thesis`.
 
 Do not infer permission from the task description.

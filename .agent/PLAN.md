@@ -23,7 +23,8 @@ The repository has four main areas:
 
 - `app/` — user-facing application source for now;
 - `k3s-stack/` — Flux-managed Kubernetes configuration;
-- `ai-memory/` — AI memory, agent instructions, skills, decisions, and session state;
+- `.agent/` — agent instructions, skills, plans, and task checklists;
+- `memory/` — durable project memory, decisions, lessons, and session state;
 - `thesis/` — diploma source.
 
 Supporting scripts live under `scripts/` and suporting tools like Ansible or terraform could have their own folder. 
@@ -45,15 +46,20 @@ The user-facing application may later move to a separate repository. This is int
 │   ├── infrastructure/
 │   └── apps/
 │
-├── ai-memory/
-│   ├── sessions/
+├── .agent/
+│   ├── PLAN.md
+│   ├── PHASE-1-TODO.md
+│   ├── instructions/
+│   │   ├── AGENTS_local.md
+│   │   ├── AGENTS_llm.md
+│   │   └── SYSTEM_PROMPT.md
+│   └── skills/
+│       └── PI-SKILLS.md
+├── memory/
+│   ├── session/
 │   ├── adr/
-│   ├── lessons/
-│   ├── architecture/
-│   ├── AGENTS.local-qwen.md
-│   ├── AGENTS.api-llm.md
-│   ├── SYSTEM_PROMPT.md
-│   └── PI-SKILLS.md
+│   ├── lesson/
+│   └── architecture/
 │
 ├── thesis/
 ├── scripts/
@@ -64,7 +70,8 @@ The user-facing application may later move to a separate repository. This is int
 
 There is no separate `docs/` directory.
 
-All persistent AI information belongs under `ai-memory/`.
+Agent workflow files belong under `.agent/`. Durable project information
+belongs under `memory/`.
 
 ## 4. GitOps boundary
 
@@ -238,7 +245,7 @@ The AI memory must allow an agent to determine:
 - relevant Git-managed resources;
 - recent session state.
 
-The AI repository state is stored in `ai-memory/`.
+The durable AI-assisted project state is stored in `memory/`.
 
 Memory types:
 
@@ -255,8 +262,8 @@ Every agent runs through the Pi harness.
 
 There are two agent instruction files:
 
-- `ai-memory/AGENTS.local.md` — local Qwen 7B-class model;
-- `ai-memory/AGENTS.llm.md` — normal API/Copilot models.
+- `.agent/instructions/AGENTS_local.md` — local Qwen 7B-class model;
+- `.agent/instructions/AGENTS_llm.md` — normal API/Copilot models.
 
 The API agent must support switching between available models without changing the project memory workflow.
 
@@ -297,7 +304,7 @@ Prefer Mermaid, UML, and ASCII diagrams when they communicate the idea better th
 
 ## 13. Path-scoped system prompt
 
-`ai-memory/SYSTEM_PROMPT.md` defines path-scoped work.
+`.agent/instructions/SYSTEM_PROMPT.md` defines path-scoped work.
 
 Examples:
 
@@ -308,8 +315,8 @@ Examples:
     -> write only app/
 /k3s-stack
     -> write only k3s-stack/
-/ai-memory
-    -> write only ai-memory/
+/memory
+    -> write only memory/
 ```
 
 The agent should load only context relevant to the active scope.
@@ -340,7 +347,7 @@ Do not preserve conversational filler.
 
 ## 15. Pi skill set
 
-`ai-memory/PI-SKILLS.md` defines the small Pi skill/extension set.
+`.agent/skills/PI-SKILLS.md` defines the small Pi skill/extension set.
 
 The skills are partly automatic and partly deliberately invoked by the user.
 

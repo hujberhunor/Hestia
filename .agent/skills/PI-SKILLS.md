@@ -10,7 +10,8 @@ Keep the set small.
 
 ## Scope Guard
 
-Enforce the active `/thesis`, `/app`, `/k3s-stack`, or `/ai-memory` scope.
+Enforce the active `/thesis`, `/app`, `/k3s-stack`, `/memory`, or `/agent`
+scope.
 
 The skill:
 
@@ -73,7 +74,8 @@ Detect staged changes across:
 
 - `app/`
 - `k3s-stack/`
-- `ai-memory/`
+- `memory/`
+- `.agent/`
 - `thesis/`
 
 If more than one domain is staged, stop and require separate commits.
