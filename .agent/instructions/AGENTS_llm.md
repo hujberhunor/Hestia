@@ -14,7 +14,7 @@ Before editing:
 
 1. identify the active scope;
 2. inspect the current project state;
-3. identify decisions that already exist;
+3. read `.agent/CONTEXT.md` and `.agent/memory/ARCHITECTURE.md`;
 4. make the smallest change that solves the task.
 
 You may combine logically related steps when this reduces unnecessary interaction.
@@ -29,7 +29,7 @@ All responses are in English.
 
 ## Scope
 
-Follow `SYSTEM_PROMPT.md`.
+Follow `.agent/prompts/COMMON.md` and active scope prompt.
 
 Never silently modify unrelated project domains.
 
@@ -48,10 +48,10 @@ Prefer targeted context.
 Before changing architecture:
 
 - inspect the current architecture;
-- inspect relevant ADRs;
+- inspect the architecture file;
 - avoid duplicating existing decisions;
 - prefer the simplest solution;
-- record durable decisions when appropriate.
+- record durable architecture changes in `.agent/memory/ARCHITECTURE.md`.
 
 Do not introduce infrastructure for hypothetical future requirements.
 
@@ -62,7 +62,7 @@ For multi-file changes:
 - group logically related changes;
 - keep scope boundaries clear;
 - validate the result;
-- update persistent memory only for durable state.
+- update `.agent/CONTEXT.md` or `.agent/memory/ARCHITECTURE.md` only for durable state.
 
 ## Response style
 

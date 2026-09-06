@@ -24,7 +24,9 @@ The repository has four main areas:
 - `app/` — user-facing application source for now;
 - `k3s-stack/` — Flux-managed Kubernetes configuration;
 - `.agent/` — agent instructions, skills, plans, and task checklists;
-- `memory/` — durable project memory, decisions, lessons, and session state;
+- `.agent/CONTEXT.md` — durable project context;
+- `.agent/memory/ARCHITECTURE.md` — architecture state and diagrams;
+- `.agent/sessions/` — task-specific continuation notes;
 - `thesis/` — diploma source.
 
 Supporting scripts live under `scripts/` and suporting tools like Ansible or terraform could have their own folder. 
@@ -47,19 +49,14 @@ The user-facing application may later move to a separate repository. This is int
 │   └── apps/
 │
 ├── .agent/
-│   ├── PLAN.md
-│   ├── PHASE-1-TODO.md
+│   ├── AGENTS.md
+│   ├── CONTEXT.md
+│   ├── memory/
+│   │   └── ARCHITECTURE.md
+│   └── sessions/
+│   ├── prompts/
 │   ├── instructions/
-│   │   ├── AGENTS_local.md
-│   │   ├── AGENTS_llm.md
-│   │   └── SYSTEM_PROMPT.md
-│   └── skills/
-│       └── PI-SKILLS.md
-├── memory/
-│   ├── session/
-│   ├── adr/
-│   ├── lesson/
-│   └── architecture/
+│   └── PLAN.md
 │
 ├── thesis/
 ├── scripts/
@@ -70,8 +67,7 @@ The user-facing application may later move to a separate repository. This is int
 
 There is no separate `docs/` directory.
 
-Agent workflow files belong under `.agent/`. Durable project information
-belongs under `memory/`.
+Agent workflow files and durable agent context belong under `.agent/`.
 
 ## 4. GitOps boundary
 
@@ -245,16 +241,9 @@ The AI memory must allow an agent to determine:
 - relevant Git-managed resources;
 - recent session state.
 
-The durable AI-assisted project state is stored in `memory/`.
-
-Memory types:
-
-- `sessions/` — recent session state;
-- `architecture/` — current architecture state;
-- `adr/` — durable architecture decisions;
-- `lessons/` — reusable lessons.
-
-There is no separate documentation directory.
+The durable AI-assisted project state is stored in `.agent/CONTEXT.md` and
+`.agent/memory/ARCHITECTURE.md`. Task-specific continuation state is stored in
+`.agent/sessions/`. There is no separate ADR, lesson, or memory framework.
 
 ## 11. Pi agents
 
@@ -304,7 +293,8 @@ Prefer Mermaid, UML, and ASCII diagrams when they communicate the idea better th
 
 ## 13. Path-scoped system prompt
 
-`.agent/instructions/SYSTEM_PROMPT.md` defines path-scoped work.
+`.agent/prompts/COMMON.md` defines universal work rules. Scope prompts under
+`.agent/prompts/` define domain-specific work.
 
 Examples:
 
@@ -316,7 +306,7 @@ Examples:
 /k3s-stack
     -> write only k3s-stack/
 /memory
-    -> write only memory/
+    -> write only .agent/
 ```
 
 The agent should load only context relevant to the active scope.
@@ -331,7 +321,8 @@ The system prompt is a safety boundary. The Git hook is an additional repository
 
 Context compaction is required for the local Qwen agent and can also reduce token use for API models.
 
-When a session becomes too large, the agent should preserve the durable state in the session file before continuing.
+When a session becomes too large, the agent should preserve current state in
+the session note before continuing.
 
 The compacted state should contain only:
 
