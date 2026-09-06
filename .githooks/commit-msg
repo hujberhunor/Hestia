@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+[ "$(git config --bool --get hestia.hooks.override 2>/dev/null || true)" = true ] && exit 0
+exec "$repo_root/scripts/git-domain-check" commit-message "$1"
