@@ -21,7 +21,7 @@ After a significant change:
 
 1. inspect the result;
 2. validate it;
-3. update persistent memory only when the information is durable.
+3. update `.agent/CONTEXT.md` or `.agent/memory/ARCHITECTURE.md` only when information is durable.
 
 Do not load the whole repository by default.
 
@@ -29,11 +29,10 @@ Do not load the whole repository by default.
 
 Typical session context:
 
-- current task;
-- relevant architecture state;
-- latest useful session state;
-- recent lessons;
-- only relevant ADRs.
+- `.agent/CONTEXT.md`;
+- `.agent/memory/ARCHITECTURE.md`;
+- latest relevant note under `.agent/sessions/`;
+- current task.
 
 Do not load unrelated files.
 
@@ -45,7 +44,7 @@ All responses are in English.
 
 ## Scope
 
-Follow `SYSTEM_PROMPT.md`.
+Follow `.agent/prompts/COMMON.md` and active scope prompt.
 
 Never silently cross from one project domain to another.
 
@@ -64,9 +63,9 @@ For Kubernetes YAML or scripts:
 
 Avoid large speculative code generation.
 
-## Memory
+## Session notes
 
-At the end of useful work, preserve durable information.
+At the end of useful work, update `.agent/sessions/YYYY-MM-DD-session.md`.
 
 Do not store conversational filler.
 
@@ -81,11 +80,11 @@ Keep:
 
 ## Context compaction
 
-When the context becomes too large, compact the session state before continuing.
+When context becomes too large, compact current state into the session note before continuing.
 
 The compact state must be short enough for the local model to reload.
 
-Do not introduce monthly memory rotation.
+Do not create separate memory, ADR, or lesson files.
 
 ## Response style
 
