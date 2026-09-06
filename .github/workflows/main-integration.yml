@@ -1,0 +1,32 @@
+name: Main integration policy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  scope-and-prefix:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check changed paths and squash prefix
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -eu
+          paths_file="$(mktemp)"
+          message_file="$(mktemp)"
+          trap 'rm -f "$paths_file" "$message_file"' EXIT
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$paths_file"
+          printf '%s\n' "$PR_TITLE" > "$message_file"
+          scripts/git-domain-check integration "$message_file" "$paths_file"
+          ruby scripts/check-staged-format $(cat "$paths_file")
