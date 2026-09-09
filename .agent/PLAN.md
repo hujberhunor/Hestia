@@ -207,4 +207,3 @@ Keep only decisions that are actually unresolved:
 - the SSH public-key onboarding flow;
 - the exact API-to-project Kubernetes authorization mechanism;
 - the final permissions for the local administrative kubeconfig;
-- the exact Pi skill loading mechanism.

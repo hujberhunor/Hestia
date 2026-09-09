@@ -13,16 +13,15 @@ about how that decision gets made.
 
 ## Where skills live
 
-`skills/<name>/SKILL.md`, one directory per skill.
+`.agent/skills/<name>/SKILL.md`, one directory per skill. Kiro also discovers them through
+`.kiro/skills`, a symlink to this directory.
 
 Currently available:
 - `session-memory` — creating, recording into, and compressing the session file
 - `context-management` — deciding what to read, and compressing the live context window
-- `asd-ste100` — Simplified Technical English writing/linting, installed as Claude Code
-  hooks — see note below
+- `asd-ste100` — Simplified Technical English writing/linting, loaded as a Kiro skill with a
+  session-start rule card — see note below
 - `skill-loader` — this skill
-
-`undo` was considered and is **not implemented**. Don't load or reference it.
 
 ## Procedure
 
@@ -45,22 +44,24 @@ Currently available:
 
 | Task involves… | Load |
 |---|---|
+| Any chat reply to a person | `asd-ste100` (Layer 2 governs the reply shape) |
 | Creating, updating, or reading a session file | `session-memory` |
 | Deciding what files/dirs to read, or context usage is getting high | `context-management` |
 | Writing prose into a session file, `PLAN.md`, or similar project doc | `session-memory` + `asd-ste100` (see note) |
-| Ordinary code editing, git inspection, or a one-off question with no session/doc writing | none of the above — just follow `SYSTEM_PROMPT.md` directly |
+| Ordinary code editing, git inspection, or a one-off question with no session/doc writing | none extra — the asd-ste100 card already loaded at session start; follow `SYSTEM_PROMPT.md` |
 
 ## Note on `asd-ste100`
 
-`asd-ste100` is installed as Claude Code hooks (`UserPromptSubmit`, `PostToolUse`, `Stop`,
-etc.), not as something this loader reads and applies manually — the hook system injects its
-rule card automatically every turn once installed. Treat it as always-active infrastructure
-rather than a skill you decide to load per task. It's listed above only so `session-memory`'s
-reference to it resolves to something real.
+`asd-ste100` loads two ways in Kiro. The `ste` agent runs an `agentSpawn` hook that prints a
+short rule card into context at session start, so the core Layer 1 and Layer 2 rules are
+always present. The full ruleset loads on demand when you open the skill for writing or
+review. There is no per-turn hook and no reply gate in Kiro — the Claude Code hooks
+(`UserPromptSubmit`, `PostToolUse`, `Stop`) do not fire here. Lint prose by hand:
+`python3 .agent/skills/asd-ste100/scripts/ste-lint.py --fail-over 2.5 FILE`.
 
-## A note on the repo layout
+## How Kiro discovery relates to this procedure
 
-The system prompt currently says skills live under `.agent/skills/`, but the actual directory
-in this repo is `skills/` at the root. This document assumes the real, current layout
-(`skills/`). Worth fixing the mismatch in `SYSTEM_PROMPT.md` at some point so the two don't
-drift further apart.
+Kiro surfaces every skill under `.kiro/skills/*/SKILL.md` as a `/name` slash command
+automatically. That is discovery only — it makes a skill available. This procedure still
+decides which skills to actually apply to a task. Use the lookup table to choose; use the
+slash command or the skill body to load the detail.
