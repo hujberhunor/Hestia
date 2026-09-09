@@ -53,11 +53,30 @@ The user-facing application may later move to a separate repository. This is int
 ├── thesis/
 ├── scripts/
 ├── ansible/
-├── .githooks/
+├── .pre-commit-config.yaml
 └── README.md
 ```
 
 There is no separate `docs/` directory.
+The repo uses the `pre-commit` framework, so there is no `.githooks/` directory.
+The hook definitions live in `.pre-commit-config.yaml`, and `pre-commit install` writes
+the git hook into `.git/hooks/`.
+
+## 3a. Pre-commit hooks
+
+The repo runs commit-time checks through the `pre-commit` framework. The scope:
+
+- Python in `app/` — formatted with `ruff format`.
+- YAML in `k3s-stack/` — formatted with `prettier`.
+- Every `kustomization.yaml` in the repo — built to catch errors. A build error blocks the commit.
+
+The check looks for build errors only. The `kustomize build` step needs a `kustomize` or
+`kubectl` binary on each machine, so this one part is not fully portable. See `README.md`
+for the install steps.
+
+The `infra`, `services`, and `apps` layers start with a kustomization that has an empty
+`resources` list. This builds clean, so the check passes before the layers hold real
+manifests. Add resources to each layer as it grows.
 
 ## 4. GitOps boundary
 

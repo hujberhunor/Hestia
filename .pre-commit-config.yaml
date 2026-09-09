@@ -1,0 +1,30 @@
+# Pre-commit hooks for the hestia repo.
+# Formatters run only on their scope. The kustomize hook checks every build.
+# Install: pip install pre-commit  (or pipx install pre-commit)
+#          pre-commit install
+default_stages: [pre-commit]
+
+repos:
+  # Python: format the platform app only.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.6
+    hooks:
+      - id: ruff-format
+        files: ^app/.*\.py$
+
+  # YAML: format the Kubernetes stack only.
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.9.6
+    hooks:
+      - id: prettier
+        files: ^k3s-stack/.*\.ya?ml$
+
+  # Kustomize: build every kustomization in the repo. Fail on a build error.
+  - repo: local
+    hooks:
+      - id: kustomize-build
+        name: kustomize build (all kustomizations)
+        entry: scripts/kustomize-check.sh
+        language: system
+        pass_filenames: false
+        always_run: true
