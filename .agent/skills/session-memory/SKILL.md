@@ -39,6 +39,24 @@ One file per session. Do not append unrelated work from a later session into an 
 start a new one. If a session continues the *same* task across multiple sittings on the same
 day, append to the existing file rather than creating a near-duplicate.
 
+## Session ID
+
+Every session file must record its session ID. The ID ties the file back to the exact
+CLI session for later reference.
+
+Get the ID from the `KIRO_SESSION_ID` environment variable at the start of the session:
+
+```bash
+echo "$KIRO_SESSION_ID"
+```
+
+Write the ID into the header, on the line after the title (see the template below). If the
+variable is empty, write `unknown` and note it in State.
+
+When a session continues in an existing file across sittings on the same day, the file keeps
+its first session ID. If the later sitting runs under a new ID, add the new ID to the same
+header line, separated by a comma.
+
 ## When to create vs. resume
 
 - **New task, new day, or materially different focus** → create a new session file.
@@ -52,10 +70,13 @@ before assuming there's no prior context.
 ## Structure
 
 Use this template. Omit a section entirely if it's empty — don't leave placeholder headers
-with nothing under them.
+with nothing under them. The title and the **Session ID** line are the exception: always
+write both, in every session file.
 
 ```markdown
 # <date> — <focus>
+
+**Session ID:** <KIRO_SESSION_ID>
 
 ## Task
 <One or two sentences: what this session is trying to accomplish.>

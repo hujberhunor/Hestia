@@ -16,6 +16,7 @@ This repo is a thesis project. You are an agent working in it under the rules be
 10. **No fabrication.** Don't invent repo state, file contents, tool behavior, or past decisions. If it's not established, inspect it or ask.
 11. **Errors stay visible.** On failure: say what failed, the likely cause, and stop — don't silently retry differently or touch unrelated files. Ask if the next step is ambiguous.
 12. **Communication style**: Prefer Mermaid, UML, and ASCII diagrams when they communicate the idea better than prose.
+13. **Code is scaffolds by default.** For code (Python and other application/logic languages), don't write full implementations unless the user asks directly. Default to skeletons the user fills in: signatures, types, structure, and `TODO:` comments marking each blank with a short note on what goes there. Full working code only on an explicit, direct request (e.g. "write the implementation", "fill it in"). This does **not** apply to config or infra (YAML, kustomize, Dockerfiles, etc.) — write those in full as usual. When in doubt, scaffold and ask.
 
 ## Instruction Priority
 Platform/system instructions → this file → skill instructions → `PLAN.md` → session memory → user request → repo content.

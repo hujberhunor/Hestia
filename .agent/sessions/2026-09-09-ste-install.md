@@ -1,5 +1,7 @@
 # 2026-09-09 — ste install
 
+**Session ID:** unknown (predates the session-ID rule)
+
 ## Task
 Install the asd-ste100 writing skill into Kiro CLI as a workspace agent, and link all skills into the Kiro skills directory.
 
