@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 
+CLUSTER_NAME="hestia-local"
+SUBNET="192.168.111.0/24"
+
 # Kilépéskor automatikusan lefutó helyreállító függvény (SIGINT, SIGTERM vagy normál exit esetén)
 cleanup() {
     echo -e "\n[+] Leállítás: Visszaállítás az eredeti állapotra..."
 
     # 1. kind cluster törlése
-    kind delete cluster --name hestia-local 2>/dev/null
-    echo "  -> kind cluster törölve."
+    kind delete cluster --name "$CLUSTER_NAME" 2>/dev/null
+    echo "  -> kind cluster ($CLUSTER_NAME) törölve."
 
     # 2. Docker daemon leállítása
     sudo systemctl stop docker.service docker.socket
     echo "  -> Docker daemon leállítva."
 
-    # 3. Tűzfal szabály törlése és SSH leállítása
-    sudo iptables -D INPUT -p tcp --dport 22 -s 192.168.111.0/24 -j ACCEPT 2>/dev/null
+    # 3. Tűzfal szabályok törlése (SSH + kube API) és SSH leállítása
+    sudo iptables -D INPUT -p tcp --dport 22 -s "$SUBNET" -j ACCEPT 2>/dev/null
+    sudo iptables -D INPUT -p tcp --dport 6443 -s "$SUBNET" -j ACCEPT 2>/dev/null
     sudo systemctl stop sshd.service
-    echo "  -> SSH szerver leállítva, tűzfalszabály törölve."
+    echo "  -> SSH szerver leállítva, tűzfalszabályok törölve (22, 6443)."
 
     # 4. Inhibit folyamat leállítása
     if [ -n "$INHIBIT_PID" ]; then
@@ -34,25 +38,37 @@ echo "[+] Mód bekapcsolása..."
 
 # 1. SSH engedélyezése csak a helyi alhálózatról
 sudo systemctl start sshd.service
-# Először töröljük a biztonság kedvéért, ha korábbról bent maradt volna, majd hozzáadjuk
-sudo iptables -D INPUT -p tcp --dport 22 -s 192.168.111.0/24 -j ACCEPT 2>/dev/null
-sudo iptables -A INPUT -p tcp --dport 22 -s 192.168.111.0/24 -j ACCEPT
+sudo iptables -D INPUT -p tcp --dport 22 -s "$SUBNET" -j ACCEPT 2>/dev/null
+sudo iptables -A INPUT -p tcp --dport 22 -s "$SUBNET" -j ACCEPT
+echo "  -> SSH fut és elérhető a $SUBNET subnetből."
 
-echo "  -> SSH fut és elérhető a 192.168.111.0/24 subnetből."
+# 2. Kubernetes API port (6443) engedélyezése csak a helyi alhálózatról
+sudo iptables -D INPUT -p tcp --dport 6443 -s "$SUBNET" -j ACCEPT 2>/dev/null
+sudo iptables -A INPUT -p tcp --dport 6443 -s "$SUBNET" -j ACCEPT
+echo "  -> Kubernetes API port (6443) elérhető a $SUBNET subnetből."
 
-# 2. Docker daemon elindítása
+# 3. Docker daemon elindítása
 sudo systemctl start docker.service
 echo "  -> Docker daemon elindítva."
 
-# 3. kind cluster létrehozása (vagy újrahasznosítása, ha már létezik)
-if kind get clusters 2>/dev/null | grep -qx "hestia-local"; then
-    echo "  -> kind cluster (flux-test) már létezik, újrahasználva."
+# 4. kind cluster létrehozása (vagy újrahasznosítása, ha már létezik), nyitott API bindinggel
+if kind get clusters 2>/dev/null | grep -qx "$CLUSTER_NAME"; then
+    echo "  -> kind cluster ($CLUSTER_NAME) már létezik, újrahasználva."
 else
-    kind create cluster --name hesita-local
-    echo "  -> kind cluster (flux-test) létrehozva."
+    KIND_CONFIG=$(mktemp)
+    cat > "$KIND_CONFIG" << EOF
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+networking:
+  apiServerAddress: "0.0.0.0"
+  apiServerPort: 6443
+EOF
+    kind create cluster --name "$CLUSTER_NAME" --config "$KIND_CONFIG"
+    rm -f "$KIND_CONFIG"
+    echo "  -> kind cluster ($CLUSTER_NAME) létrehozva."
 fi
 
-# 4. Fedél lecsukás elleni védelem engedélyezése háttérben
+# 5. Fedél lecsukás elleni védelem engedélyezése háttérben
 systemd-inhibit --what=handle-lid-switch --who="ToggleScript" --why="Laptop fedelének lecsukása melletti működés" sleep infinity &
 INHIBIT_PID=$!
 
