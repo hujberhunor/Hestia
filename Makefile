@@ -9,7 +9,7 @@ T480_HOST ?=
 T480_USER ?= i3hunor
 T480_REMOTE_PATH ?= ~/Hestia/$(KUBECONFIG_OUT)
 
-LAPTOP_IP := $(shell hostname -I | awk '{print $$1}')
+LAPTOP_IP := $(shell ip -4 -o addr show scope global | awk '{print $$4}' | cut -d/ -f1 | grep '^192\.168\.111\.' | head -n1)
 
 .PHONY: ssh up kubeconfig down status
 
@@ -22,6 +22,11 @@ ssh:
 
 # 2) FUTTASD A T480-ON: nyitja a 6443-at, elindul docker + kind cluster
 up:
+	@if [ -z "$(LAPTOP_IP)" ]; then \
+		echo "Hiba: nem sikerult automatikusan detektalni a 192.168.111.x IP-t."; \
+		echo "Add meg kezzel: make up LAPTOP_IP=192.168.111.X"; \
+		exit 1; \
+	fi
 	sudo iptables -D INPUT -p tcp --dport 6443 -s $(SUBNET) -j ACCEPT 2>/dev/null || true
 	sudo iptables -A INPUT -p tcp --dport 6443 -s $(SUBNET) -j ACCEPT
 	sudo systemctl start docker.service
@@ -30,11 +35,19 @@ up:
 	else \
 		tmpconfig=$$(mktemp); \
 		printf 'apiVersion: kind.x-k8s.io/v1alpha4\nkind: Cluster\nnetworking:\n  apiServerAddress: "0.0.0.0"\n  apiServerPort: 6443\nkubeadmConfigPatches:\n  - |\n    kind: ClusterConfiguration\n    apiServer:\n      certSANs:\n        - "$(LAPTOP_IP)"\n' > $$tmpconfig; \
-		kind create cluster --name $(CLUSTER_NAME) --config $$tmpconfig; \
+		if ! kind create cluster --name $(CLUSTER_NAME) --config $$tmpconfig; then \
+			echo "Hiba: kind cluster letrehozasa sikertelen, takaritas..."; \
+			rm -f $$tmpconfig; \
+			kind delete cluster --name $(CLUSTER_NAME) 2>/dev/null; \
+			exit 1; \
+		fi; \
 		rm -f $$tmpconfig; \
 		echo "-> kind cluster ($(CLUSTER_NAME)) letrehozva, cert SAN: $(LAPTOP_IP)"; \
 	fi
-	kind get kubeconfig --name $(CLUSTER_NAME) | sed 's/127.0.0.1/$(LAPTOP_IP)/' > $(KUBECONFIG_OUT)
+	@if ! kind get kubeconfig --name $(CLUSTER_NAME) | sed 's/127.0.0.1/$(LAPTOP_IP)/' > $(KUBECONFIG_OUT); then \
+		echo "Hiba: kubeconfig export sikertelen."; \
+		exit 1; \
+	fi
 	@echo "-> Kubeconfig kesz a t480-on: $$(pwd)/$(KUBECONFIG_OUT)"
 	@setsid systemd-inhibit --what=handle-lid-switch --who="MakefileToggle" --why="kind cluster fut" sleep infinity & echo $$! > $(INHIBIT_PID_FILE)
 	@echo "-> Fedel lecsukas elleni vedelem aktiv."
