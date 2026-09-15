@@ -44,7 +44,7 @@ up:
 		rm -f $$tmpconfig; \
 		echo "-> kind cluster ($(CLUSTER_NAME)) letrehozva, cert SAN: $(LAPTOP_IP)"; \
 	fi
-	@if ! kind get kubeconfig --name $(CLUSTER_NAME) | sed 's/127.0.0.1/$(LAPTOP_IP)/' > $(KUBECONFIG_OUT); then \
+	@if ! kind get kubeconfig --name $(CLUSTER_NAME) | sed 's/0.0.0.0/$(LAPTOP_IP)/' > $(KUBECONFIG_OUT); then \
 		echo "Hiba: kubeconfig export sikertelen."; \
 		exit 1; \
 	fi
