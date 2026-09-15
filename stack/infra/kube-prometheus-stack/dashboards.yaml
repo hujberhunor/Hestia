@@ -1,0 +1,1033 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-tsdb
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: LABORATORY
+data:
+  tsdb.json: |
+    {
+      "uid": "tsdb-scrape-impact",
+      "title": "TSDB",
+      "description": "Shows how scrape interval affects Prometheus TSDB storage size over time",
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-3h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "TSDB Total Size (Blocks + WAL)",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 15
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_storage_blocks_bytes",
+              "legendFormat": "Blocks Size",
+              "refId": "A"
+            },
+            {
+              "expr": "prometheus_tsdb_wal_storage_size_bytes",
+              "legendFormat": "WAL Size",
+              "refId": "B"
+            },
+            {
+              "expr": "prometheus_tsdb_storage_blocks_bytes + prometheus_tsdb_wal_storage_size_bytes",
+              "legendFormat": "Total TSDB Size",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Current TSDB Total Size",
+          "type": "stat",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 5368709120
+                  },
+                  {
+                    "color": "red",
+                    "value": 8589934592
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_storage_blocks_bytes + prometheus_tsdb_wal_storage_size_bytes",
+              "legendFormat": "Total Size",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Active Time Series",
+          "type": "stat",
+          "gridPos": {
+            "x": 6,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 50000
+                  },
+                  {
+                    "color": "red",
+                    "value": 200000
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_head_series",
+              "legendFormat": "Active Series",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Scrape Interval (seconds)",
+          "type": "stat",
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 30
+                  },
+                  {
+                    "color": "red",
+                    "value": 60
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "avg(scrape_interval_seconds)",
+              "legendFormat": "Avg Scrape Interval",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Estimated Daily Ingestion Rate",
+          "type": "stat",
+          "gridPos": {
+            "x": 18,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 500000
+                  },
+                  {
+                    "color": "red",
+                    "value": 1000000
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_head_series * (86400 / avg(scrape_interval_seconds))",
+              "legendFormat": "Samples/day",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "title": "Samples Ingested per Second",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(prometheus_tsdb_head_samples_appended_total[5m])",
+              "legendFormat": "Samples/sec ingested",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "TSDB Compaction Activity",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "increase(prometheus_tsdb_compactions_total[30m])",
+              "legendFormat": "Compactions (30m)",
+              "refId": "A"
+            },
+            {
+              "expr": "prometheus_tsdb_blocks_loaded",
+              "legendFormat": "Blocks Loaded",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "title": "WAL Truncations & Corruptions",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 19,
+            "w": 12,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "increase(prometheus_tsdb_wal_truncations_total[30m])",
+              "legendFormat": "WAL Truncations (30m)",
+              "refId": "A"
+            },
+            {
+              "expr": "increase(prometheus_tsdb_wal_corruptions_total[30m])",
+              "legendFormat": "WAL Corruptions (30m)",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "title": "Head Chunk Range",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 19,
+            "w": 12,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dateTimeAsIso",
+              "custom": {
+                "lineWidth": 2
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_head_min_time / 1000",
+              "legendFormat": "Oldest data point",
+              "refId": "A"
+            },
+            {
+              "expr": "prometheus_tsdb_head_max_time / 1000",
+              "legendFormat": "Newest data point",
+              "refId": "B"
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 36,
+      "folderTitle": "LABORATORY"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-experiment
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: LABORATORY
+data:
+  experiment.json: |
+    {
+      "uid": "scrape-interval-experiment",
+      "title": "Experiment",
+      "description": "Tracks CPU, TSDB size and network impact of scrape interval changes. Annotations mark each config reload.",
+      "timezone": "browser",
+      "refresh": "15s",
+      "time": { "from": "now-6h", "to": "now" },
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          },
+          {
+            "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+            "enable": true,
+            "hide": false,
+            "iconColor": "red",
+            "limit": 100,
+            "name": "Scrape Interval Changes",
+            "showIn": 0,
+            "tags": ["scrape-interval", "reload"],
+            "type": "tags"
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Prometheus CPU Usage (milli-cores)",
+          "description": "Watch for CPU spike at each annotation line — this is the reconfiguration overhead described in the AdaMC paper",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "displayName": "CPU (millicores)",
+              "color": { "mode": "fixed", "fixedColor": "orange" },
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "spanNulls": false
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{job=\"kube-prometheus-stack-prometheus\"}[1m]) * 1000",
+              "legendFormat": "Prometheus CPU (millicores)",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "TSDB Total Size",
+          "description": "Storage growth rate should slow down as scrape interval increases — fewer samples = less data",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": { "mode": "fixed", "fixedColor": "blue" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_storage_blocks_bytes + prometheus_tsdb_wal_storage_size_bytes",
+              "legendFormat": "Total TSDB Size",
+              "refId": "A"
+            },
+            {
+              "expr": "prometheus_tsdb_wal_storage_size_bytes",
+              "legendFormat": "WAL Size",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Samples Ingested per Second",
+          "description": "Should drop proportionally as scrape interval increases (2x interval = ~0.5x samples/sec)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "fixed", "fixedColor": "green" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(prometheus_tsdb_head_samples_appended_total[2m])",
+              "legendFormat": "Samples/sec",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Scrape Duration — Synthetic Pods",
+          "description": "How long each scrape of the synthetic metric generators takes",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 15, "w": 12, "h": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 1, "fillOpacity": 5 }
+            }
+          },
+          "targets": [
+            {
+              "expr": "scrape_duration_seconds{namespace=\"synthetic\"}",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Active Scrape Targets (Synthetic)",
+          "description": "Number of synthetic targets being scraped",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 15, "w": 12, "h": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "fixed", "fixedColor": "purple" },
+              "custom": { "lineWidth": 2 }
+            }
+          },
+          "targets": [
+            {
+              "expr": "count(up{namespace=\"synthetic\"} == 1)",
+              "legendFormat": "Up targets",
+              "refId": "A"
+            },
+            {
+              "expr": "count(up{namespace=\"synthetic\"} == 0) or vector(0)",
+              "legendFormat": "Down targets",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "title": "Prometheus Memory Usage",
+          "description": "Memory consumption at each scrape interval — compare to AdaMC paper formula: memory = 1.6e-4*mpm + 1.6e-3*mts + 772",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 22, "w": 12, "h": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": { "mode": "fixed", "fixedColor": "red" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "legendFormat": "RSS Memory",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Metrics Scraped per Minute (mpm)",
+          "description": "Key input to AdaMC resource estimator: cpu = 9.1e-5*mpm + 2.7e-4*mts + 149",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 22, "w": 12, "h": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "fixed", "fixedColor": "yellow" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(prometheus_tsdb_head_samples_appended_total[1m]) * 60",
+              "legendFormat": "Metrics per minute (mpm)",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "title": "Current Experiment State",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 29, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 30 },
+                  { "color": "red", "value": 90 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "avg(scrape_interval_seconds{namespace=\"synthetic\"})",
+              "legendFormat": "Current Scrape Interval",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "title": "Total Samples Ingested",
+          "type": "stat",
+          "gridPos": { "x": 6, "y": 29, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [{ "color": "blue", "value": null }]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_head_samples_appended_total",
+              "legendFormat": "Total Samples",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "title": "Current TSDB Size",
+          "type": "stat",
+          "gridPos": { "x": 12, "y": 29, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 5368709120 },
+                  { "color": "red", "value": 8589934592 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "prometheus_tsdb_storage_blocks_bytes + prometheus_tsdb_wal_storage_size_bytes",
+              "legendFormat": "TSDB Size",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "title": "Current Prometheus CPU",
+          "type": "stat",
+          "gridPos": { "x": 18, "y": 29, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "displayName": "millicores",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 300 },
+                  { "color": "red", "value": 700 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{job=\"kube-prometheus-stack-prometheus\"}[1m]) * 1000",
+              "legendFormat": "CPU millicores",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 36,
+      "folderTitle": "LABORATORY"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-scrape-cpu
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: LABORATORY
+data:
+  scrape-cpu.json: |
+    {
+      "uid": "scrape-interval-cpu",
+      "title": "Scrape CPU",
+      "description": "Correlates Prometheus scrape interval with CPU usage across the cluster",
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-3h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Prometheus CPU Usage",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 15
+              },
+              "color": {
+                "mode": "palette-classic"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{job=\"kube-prometheus-stack-prometheus\"}[5m])",
+              "legendFormat": "Prometheus CPU",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Scrape Duration by Job",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "color": {
+                "mode": "palette-classic"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "avg by(job) (scrape_duration_seconds)",
+              "legendFormat": "{{job}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Current Prometheus CPU",
+          "type": "stat",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "decimals": 2,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.3
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.7
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{job=\"kube-prometheus-stack-prometheus\"}[5m])",
+              "legendFormat": "",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Avg Scrape Interval",
+          "type": "stat",
+          "gridPos": {
+            "x": 6,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "decimals": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 30
+                  },
+                  {
+                    "color": "red",
+                    "value": 60
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "avg(scrape_interval_seconds)",
+              "legendFormat": "",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Active Scrape Targets",
+          "type": "stat",
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 100
+                  },
+                  {
+                    "color": "red",
+                    "value": 500
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "count(up == 1)",
+              "legendFormat": "",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "title": "Failed Scrapes",
+          "type": "stat",
+          "gridPos": {
+            "x": 18,
+            "y": 8,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "count(up == 0) or vector(0)",
+              "legendFormat": "",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Node CPU Usage (All Nodes)",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 24,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "color": {
+                "mode": "palette-classic"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "1 - avg by(node) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "title": "Scrape Samples per Target",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 20,
+            "w": 12,
+            "h": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "color": {
+                "mode": "palette-classic"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "topk(10, scrape_samples_scraped)",
+              "legendFormat": "{{job}} / {{instance}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "title": "Prometheus Memory Usage",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 20,
+            "w": 12,
+            "h": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "color": {
+                "mode": "palette-classic"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "legendFormat": "RSS Memory",
+              "refId": "A"
+            },
+            {
+              "expr": "process_virtual_memory_bytes{job=\"kube-prometheus-stack-prometheus\"}",
+              "legendFormat": "Virtual Memory",
+              "refId": "B"
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 36,
+      "folderTitle": "LABORATORY"
+    }
